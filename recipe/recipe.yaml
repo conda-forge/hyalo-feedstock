@@ -13,33 +13,23 @@ build:
   number: 0
   script:
     env:
-      CARGO_PROFILE_RELEASE_STRIP: symbols
       CARGO_PROFILE_RELEASE_LTO: fat
+      CARGO_PROFILE_RELEASE_STRIP: symbols
+    interpreter: nu
     content:
+      - let prefix = $env.LIBRARY_PREFIX? | default $env.PREFIX
+      # build main app and generate license data
       - cd crates/hyalo-cli
-      - if: unix
-        then:
-          - cargo auditable install --path=. --root="$PREFIX" --no-track --locked --bins
-          # generate shell completions
-          - if: build_platform == host_platform
-            then:
-              - mkdir -p "$PREFIX"/share/bash-completion/completions "$PREFIX"/share/fish/vendor_completions.d "$PREFIX"/share/zsh/site-functions
-              - '"$PREFIX"/bin/hyalo completion bash > "$PREFIX"/share/bash-completion/completions/hyalo'
-              - '"$PREFIX"/bin/hyalo completion fish > "$PREFIX"/share/fish/vendor_completions.d/hyalo.fish'
-              - '"$PREFIX"/bin/hyalo completion zsh  > "$PREFIX"/share/zsh/site-functions/_hyalo'
-      - if: win
-        then:
-          - cargo auditable install --path=. --root="%LIBRARY_PREFIX%" --no-track --locked --bins
-          # generate shell completions
-          - if: build_platform == host_platform
-            then:
-              - mkdir "%LIBRARY_PREFIX%"\share\bash-completion\completions
-              - mkdir "%LIBRARY_PREFIX%"\share\fish\vendor_completions.d
-              - mkdir "%LIBRARY_PREFIX%"\share\zsh\site-functions
-              - '"%LIBRARY_BIN%"\hyalo.exe completion bash > "%LIBRARY_PREFIX%"\share\bash-completion\completions\hyalo'
-              - '"%LIBRARY_BIN%"\hyalo.exe completion fish > "%LIBRARY_PREFIX%"\share\fish\vendor_completions.d\hyalo.fish'
-              - '"%LIBRARY_BIN%"\hyalo.exe completion zsh  > "%LIBRARY_PREFIX%"\share\zsh\site-functions\_hyalo'
+      - cargo auditable install --path=. --root=($prefix) --no-track --locked --bins
       - cargo-bundle-licenses --format=yaml --output=../../THIRDPARTY.yml
+      # generate shell completions
+      - if: build_platform == host_platform
+        then:
+          - mkdir ($prefix)/share/bash-completion/completions ($prefix)/share/fish/vendor_completions.d ($prefix)/share/zsh/site-functions
+          - let bin = ($prefix)/bin/hyalo
+          - ^$bin completion bash | save ($prefix)/share/bash-completion/completions/hyalo
+          - ^$bin completion fish | save ($prefix)/share/fish/vendor_completions.d/hyalo.fish
+          - ^$bin completion zsh  | save ($prefix)/share/zsh/site-functions/_hyalo
 
 requirements:
   build:
@@ -48,6 +38,7 @@ requirements:
     - ${{ compiler('rust') }}
     - cargo-bundle-licenses
     - cargo-auditable
+    - nushell
 
 tests:
   - script:
