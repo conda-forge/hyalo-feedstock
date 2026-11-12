@@ -1,5 +1,5 @@
 context:
-  version: "0.26.0"
+  version: "0.26.1"
 
 package:
   name: hyalo
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/ractive/hyalo/archive/refs/tags/v${{ version }}.tar.gz
-  sha256: d4a7034a0c97e4eb6e7a99b49f1a2a7afc3cf3a79486b40c8f14dfd40f05c609
+  sha256: fbbbbf58006cfafeca8dfca6536303dfcb14ca218b7c911add461d0626494a53
 
 build:
   number: 0
